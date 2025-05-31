@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
+import Slider from "react-slick"
 import DramaGrid from "../components/DramaGrid"
 import SearchBar from "../components/SearchBar"
 import { getDramas } from "../utils/api"
 import { FaArrowRight } from "react-icons/fa"
 import { toast } from "react-toastify"
+import "slick-carousel/slick/slick.css"
+import "slick-carousel/slick/slick-theme.css"
 
 const Home = () => {
   const [dramas, setDramas] = useState([])
@@ -15,13 +18,16 @@ const Home = () => {
   const [filteredDramas, setFilteredDramas] = useState([])
   const [retryCount, setRetryCount] = useState(0)
 
-  // Функция для обработки отсутствующих изображений
+  const navigate = useNavigate()
+
   const processImageUrls = (dramaList) => {
     if (!Array.isArray(dramaList)) return []
 
     return dramaList.map((drama) => ({
       ...drama,
-      image: drama.image || `/placeholder.svg?height=450&width=300&text=${encodeURIComponent(drama.title || "Дорама")}`,
+      image:
+        drama.image ||
+        `/placeholder.svg?height=450&width=300&text=${encodeURIComponent(drama.title || "Дорама")}`,
     }))
   }
 
@@ -29,32 +35,21 @@ const Home = () => {
     const fetchDramas = async () => {
       try {
         setLoading(true)
-        console.log("Главная страница: Загрузка списка дорам...")
-
-        // Добавляем параметр для отладки
         const data = await getDramas(null, true)
-        console.log("Главная страница: Получены данные:", data)
 
-        // Проверяем, что данные - это массив
         if (Array.isArray(data)) {
-          console.log("Главная страница: Данные являются массивом длиной:", data.length)
           const processedData = processImageUrls(data)
           setDramas(processedData)
           setFilteredDramas(processedData)
         } else if (data && typeof data === "object") {
-          // Если это объект, пытаемся найти массив внутри
           const dramasArray = data.tovars || data.dramas || data.data || []
-          console.log("Главная страница: Извлеченный массив дорам:", dramasArray)
-          console.log("Главная страница: Длина массива:", dramasArray.length)
           const processedData = processImageUrls(dramasArray)
           setDramas(processedData)
           setFilteredDramas(processedData)
         } else {
-          console.error("Главная страница: Неожиданный формат данных:", data)
           setError("Неожиданный формат данных от сервера")
         }
       } catch (error) {
-        console.error("Главная страница: Ошибка при загрузке дорам:", error)
         setError(error.message)
         toast.error(`Ошибка при загрузке дорам: ${error.message}`)
       } finally {
@@ -83,33 +78,62 @@ const Home = () => {
     setFilteredDramas(filtered)
   }
 
-  // Получаем уникальные жанры из всех дорам
   const allGenres = [
-    ...new Set(dramas.flatMap((drama) => (drama.genre && Array.isArray(drama.genre) ? drama.genre : []))),
+    ...new Set(
+      dramas.flatMap((drama) => (drama.genre && Array.isArray(drama.genre) ? drama.genre : [])),
+    ),
   ].slice(0, 6)
 
-  // Функция для повторной загрузки данных
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1)
   }
 
+  const sliderSettings = {
+    dots: false,
+    infinite: true,
+    speed: 5000,
+    slidesToShow: 5,
+    slidesToScroll: 2,
+    autoplay: true,
+    autoplaySpeed: 0,
+    cssEase: "linear",
+    pauseOnHover: false,
+    arrows: false,
+    swipe: false,
+    draggable: false,
+    afterChange: () => {
+      navigate("/") // 切换后跳转首页
+    },
+  }
+
   return (
     <div className="home-page">
-      <div className="hero-section">
-        <div className="hero-content">
-          <h1>Добро пожаловать на QazaqDorama</h1>
-          <p>Лучшие корейские и азиатские дорамы в одном месте</p>
-        </div>
+      <div className="hero-slider" style={{ marginBottom: "30px", padding: "0 40px" }}>
+        <Slider {...sliderSettings}>
+          {dramas.map((drama) => (
+            <div key={drama.id || drama._id} style={{ cursor: "default", padding: "0 10px" }}>
+              <img
+                src={drama.image}
+                alt={drama.title}
+                style={{
+                  width: "100%",
+                  borderRadius: "8px",
+                  height: "400px",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          ))}
+        </Slider>
       </div>
 
       <SearchBar onSearch={handleSearch} />
 
-      {/* Отладочная информация */}
-      <div className="debug-info">
+      {/* <div className="debug-info">
         <p>Загружено дорам: {dramas.length}</p>
         <p>Отфильтровано: {filteredDramas.length}</p>
         <p>Состояние: {loading ? "Загрузка..." : error ? `Ошибка: ${error}` : "Готово"}</p>
-      </div>
+      </div> */}
 
       <section className="section">
         <div className="section-header">

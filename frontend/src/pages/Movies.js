@@ -12,37 +12,36 @@ const Movies = () => {
   const [filteredMovies, setFilteredMovies] = useState([])
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/tovars`)
+  const fetchMovies = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tovars`);
 
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить фильмы")
-        }
-
-        const data = await response.json()
-
-        if (data.success) {
-          // Filter for movies (assuming movies have a shorter duration or specific genre)
-          // This is a simplified example - you might need to adjust based on your data structure
-          const moviesOnly = data.data.filter((item) =>
-            item.genre.some((g) => g.toLowerCase() === "фильм" || g.toLowerCase() === "movie"),
-          )
-          setMovies(moviesOnly)
-          setFilteredMovies(moviesOnly)
-        } else {
-          throw new Error(data.message || "Ошибка при загрузке фильмов")
-        }
-      } catch (error) {
-        console.error("Error fetching movies:", error)
-        setError(error.message)
-      } finally {
-        setLoading(false)
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить фильмы");
       }
-    }
 
-    fetchMovies()
-  }, [])
+      const data = await response.json();
+
+      if (data.success) {
+        // 用type字段筛选电影
+        const moviesOnly = data.data.filter(item => item.type === "movie");
+
+        setMovies(moviesOnly);
+        setFilteredMovies(moviesOnly);
+      } else {
+        throw new Error(data.message || "Ошибка при загрузке фильмов");
+      }
+    } catch (error) {
+      console.error("Error fetching movies:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchMovies();
+}, []);
+
 
   const handleSearch = (query) => {
     if (!query.trim()) {

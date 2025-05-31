@@ -6,16 +6,29 @@ import { AuthContext } from "../contexts/AuthContext"
 import { createDrama } from "../utils/api"
 import { toast } from "react-toastify"
 
+const allGenres = [
+  "романтика",
+  "драма",
+  "фэнтези",
+  "боевик",
+  "комедия",
+  "триллер",
+  "фильм",
+  "сериал",
+]
+
 const AddDrama = () => {
   const { token } = useContext(AuthContext)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [image, setImage] = useState("")
-  const [genre, setGenre] = useState("")
+  const [videoUrl, setVideoUrl] = useState("") // 新增视频URL状态
+  const [genre, setGenre] = useState(allGenres[0]) 
   const [releaseDate, setReleaseDate] = useState("")
   const [rating, setRating] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const [type, setType] = useState("serial")
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,7 +42,9 @@ const AddDrama = () => {
       title,
       description: description || "",
       image: image || "",
-      genre: genre ? genre.split(",").map((g) => g.trim()) : [],
+      videoUrl: videoUrl || "",  // 发送视频URL字段
+      genre: [genre],
+      type,
       releaseDate: releaseDate || new Date().toISOString().slice(0, 10),
       rating: Number.parseFloat(rating) || 0,
     }
@@ -43,17 +58,22 @@ const AddDrama = () => {
 
       toast.success("Дорама успешно добавлена")
 
-      // Очищаем форму
       setTitle("")
       setDescription("")
       setImage("")
-      setGenre("")
+      setVideoUrl("")  // 清空视频URL输入框
+      setGenre(allGenres[0])
       setReleaseDate("")
       setRating("")
 
-      // Перенаправляем на главную страницу или на страницу созданной дорамы
-      if (result && (result._id || result.id)) {
-        navigate(`/dramas/${result._id || result.id}`)
+      if (result) {
+        const dramaId = result._id || result.id
+        if (dramaId && /^[a-f\d]{24}$/i.test(dramaId)) {
+          navigate(`/dramas/${dramaId}`)
+        } else {
+          toast.error("Получен некорректный ID дорамы")
+          navigate("/")
+        }
       } else {
         navigate("/")
       }
@@ -74,10 +94,12 @@ const AddDrama = () => {
           <label htmlFor="title">Название:</label>
           <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
+
         <div className="form-group">
           <label htmlFor="description">Описание:</label>
           <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
+
         <div className="form-group">
           <label htmlFor="image">URL изображения:</label>
           <input type="text" id="image" value={image} onChange={(e) => setImage(e.target.value)} />
@@ -95,14 +117,36 @@ const AddDrama = () => {
             </div>
           )}
         </div>
+
         <div className="form-group">
-          <label htmlFor="genre">Жанры (через запятую):</label>
-          <input type="text" id="genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
+          <label htmlFor="videoUrl">URL видео:</label>
+          <input type="text" id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" />
         </div>
+
+        <div className="form-group">
+          <label htmlFor="genre">Жанр:</label>
+          <select id="genre" value={genre} onChange={(e) => setGenre(e.target.value)}>
+            {allGenres.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="type">Тип:</label>
+          <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
+            <option value="serial">Сериал</option>
+            <option value="movie">Фильм</option>
+          </select>
+        </div>
+
         <div className="form-group">
           <label htmlFor="releaseDate">Дата выхода:</label>
           <input type="date" id="releaseDate" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)} />
         </div>
+
         <div className="form-group">
           <label htmlFor="rating">Рейтинг:</label>
           <input
@@ -115,6 +159,7 @@ const AddDrama = () => {
             max="10"
           />
         </div>
+
         <button type="submit" className="btn" disabled={loading}>
           {loading ? "Добавление..." : "Добавить дораму"}
         </button>

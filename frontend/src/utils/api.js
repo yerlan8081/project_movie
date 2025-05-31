@@ -573,3 +573,86 @@ const logApiCall = (method, url, requestData, responseData, error = null) => {
     return getMockDramas().sort((a, b) => b.rating - a.rating)
   }
   
+  // utils/api.js
+
+/**
+ * 管理员获取所有用户
+ * @param {string} token - 管理员用户的 JWT token
+ * @returns {Promise<Array>} - 返回用户数组，每个用户对象包含 _id、username、role 等（不含 password）
+ */
+export const getUsers = async (token) => {
+  const res = await fetch("/api/admin/users", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    // 抛出错误以便页面层 catch
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "获取用户列表失败");
+  }
+  // 结构为 { success: true, users: [...] }
+  const data = await res.json();
+  return data.users;
+};
+
+/**
+ * 管理员删除某个用户
+ * @param {string} id - 要删除的用户 ID
+ * @param {string} token - 管理员 token
+ */
+export const deleteUser = async (id, token) => {
+  const res = await fetch(`/api/admin/users/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "删除用户失败");
+  }
+  // 如果需要拿到后端返回值可以在此返回一个 value，
+  // 但后端只返回 { success: true, message: "用户已删除" }
+};
+
+/**
+ * 管理员修改指定用户角色
+ * @param {string} id - 用户 ID
+ * @param {"admin"|"user"} role - 要设置的角色
+ * @param {string} token - 管理员 token
+ */
+export const updateUserRole = async (id, role, token) => {
+  const res = await fetch(`/api/admin/users/${id}/role`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "修改用户角色失败");
+  }
+  // 后端返回 { success: true, message: "用户角色已更新" }
+};
+
+/**
+ * 管理员新增用户
+ * @param {{ username: string, password: string, role?: "admin"|"user" }} userData
+ * @param {string} token
+ * @returns {Promise<Object>} - 返回新创建的用户对象（不含 password）
+ */
+export const registerUserByAdmin = async (userData, token) => {
+  const res = await fetch(`/api/admin/users`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "管理员新增用户失败");
+  }
+  const data = await res.json(); // { success: true, user: { id, username, role, createdAt } }
+  return data.user;
+};

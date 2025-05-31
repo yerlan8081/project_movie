@@ -2,7 +2,6 @@ import express from "express";
 import Tovar from "../models/tovar.js"; // Убедитесь, что путь к модели правильный
 import { authenticateToken, adminOnly } from "../middleware/auth.js";
 
-
 const router = express.Router();
 
 // Получить все товары
@@ -21,7 +20,7 @@ router.get("/search", async (req, res) => {
   const query = req.query.q || "";
   const regex = new RegExp(query, "i");
   try {
-    const tovar = await Tovar.find({ title: regex }); // Исправлено поле на "title"
+    const tovar = await Tovar.find({ title: regex });
     res.status(200).json({ success: true, data: tovar });
   } catch (error) {
     console.error(error);
@@ -46,13 +45,17 @@ router.get("/:id", async (req, res) => {
 
 // Добавить новый товар (только админ)
 router.post("/", authenticateToken, adminOnly, async (req, res) => {
-  const { title, description, image, genre, releaseDate, rating } = req.body;
+  const { title, description, image, genre, releaseDate, rating, type, videoUrl } = req.body;
 
-  if (!title || !description || !image || !genre || !releaseDate || !rating) {
+  if (!title || !description || !image || !genre || !releaseDate || rating === undefined || !type) {
     return res.status(400).json({ success: false, message: "Please provide all required fields" });
   }
 
-  const newTovar = new Tovar({ title, description, image, genre, releaseDate, rating });
+  if (!["serial", "movie"].includes(type)) {
+    return res.status(400).json({ success: false, message: "Invalid type value" });
+  }
+
+  const newTovar = new Tovar({ title, description, image, genre, releaseDate, rating, type, videoUrl });
 
   try {
     await newTovar.save();
@@ -66,10 +69,14 @@ router.post("/", authenticateToken, adminOnly, async (req, res) => {
 // Обновить товар (только админ)
 router.put("/:id", authenticateToken, adminOnly, async (req, res) => {
   const { id } = req.params;
-  const { title, description, image, genre, releaseDate, rating } = req.body;
+  const { title, description, image, genre, releaseDate, rating, type, videoUrl } = req.body;
 
-  if (!title || !description || !image || !genre || !releaseDate || !rating) {
+  if (!title || !description || !image || !genre || !releaseDate || rating === undefined || !type) {
     return res.status(400).json({ success: false, message: "Please provide all required fields" });
+  }
+
+  if (!["serial", "movie"].includes(type)) {
+    return res.status(400).json({ success: false, message: "Invalid type value" });
   }
 
   try {
@@ -80,7 +87,7 @@ router.put("/:id", authenticateToken, adminOnly, async (req, res) => {
 
     const updatedTovar = await Tovar.findByIdAndUpdate(
       id,
-      { title, description, image, genre, releaseDate, rating },
+      { title, description, image, genre, releaseDate, rating, type, videoUrl },
       { new: true }
     );
     res.status(200).json({ success: true, data: updatedTovar });

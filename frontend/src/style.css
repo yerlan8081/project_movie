@@ -15,8 +15,6 @@ body {
 
 /* === HEADER === */
 .header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
   background-color: #6f42c1;
   color: white;
@@ -187,6 +185,41 @@ body {
 
 .form-group {
   margin-bottom: 20px;
+}
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: border-color 0.3s ease;
+  resize: vertical;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  min-height: 80px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="date"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  
+  outline: none;
+  border-color: #6f42c1;
+  box-shadow: 0 0 6px rgba(111, 66, 193, 0.5);
+}
+
+.form-group select {
+  background-color: transparent;
 }
 
 .form-group label {
@@ -1152,4 +1185,22 @@ body.dark-mode .top-rated-page h1 {
 
 body.dark-mode .top-rated-page .subtitle {
   color: #aaa;
+}
+
+.hero-slider {
+  padding: 0 40px;
+  margin: 0 auto;
+}
+
+.slick-slide img {
+  transition: transform 0.3s ease;
+  border-radius: 8px;
+  height: 400px;      /* увеличили высоту */
+  width: 100%;
+  object-fit: cover;
+  padding: 0 10px;    /* чуть больше отступ */
+}
+
+.slick-slide:hover img {
+  transform: scale(1.05);
 }

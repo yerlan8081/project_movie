@@ -4,6 +4,7 @@ import cors from "cors"
 import { connectDB } from "./db/config.js"
 import tovarRoutes from "./routes/tovar.js"
 import userRoutes from "./routes/users.js"
+import adminUserRoutes from "./routes/adminUsers.js" // 新增 admin 用户管理路由
 import { authenticateToken, adminOnly } from "./middleware/auth.js"
 import dotenv from "dotenv"
 
@@ -19,10 +20,9 @@ app.use(express.json())
 // Connect to MongoDB
 connectDB()
 
-// Публичные маршруты для получения товаров (без авторизации)
+// Public routes for dramas
 app.get("/tovars", async (req, res) => {
   try {
-    // Импортируем модель Tovar напрямую здесь
     const Tovar = (await import("./models/tovar.js")).default
     const tovar = await Tovar.find({})
     res.status(200).json({ success: true, data: tovar })
@@ -35,7 +35,6 @@ app.get("/tovars", async (req, res) => {
 app.get("/tovars/:id", async (req, res) => {
   const { id } = req.params
   try {
-    // Импортируем модель Tovar напрямую здесь
     const Tovar = (await import("./models/tovar.js")).default
     const tovar = await Tovar.findById(id)
     if (!tovar) {
@@ -48,25 +47,17 @@ app.get("/tovars/:id", async (req, res) => {
   }
 })
 
-// Добавляем маршрут для получения топ-рейтинговых дорам
 app.get("/top", async (req, res) => {
   try {
-    // Импортируем модель Tovar напрямую здесь
     const Tovar = (await import("./models/tovar.js")).default
-    // Получаем все дорамы и сортируем их по рейтингу (от высокого к низкому)
     const topDramas = await Tovar.find({}).sort({ rating: -1 }).limit(10)
-
-    // Добавляем логирование для отладки
-    console.log(`Отправка ${topDramas.length} топ-рейтинговых дорам`)
-
     res.status(200).json({ success: true, data: topDramas })
   } catch (error) {
-    console.error("Ошибка при получении топ-рейтинговых дорам:", error)
+    console.error("Top dramas error:", error)
     res.status(500).json({ success: false, message: "Server error" })
   }
 })
 
-// Добавляем альтернативный маршрут для получения топ-рейтинговых дорам
 app.get("/api/top", async (req, res) => {
   try {
     const Tovar = (await import("./models/tovar.js")).default
@@ -78,21 +69,24 @@ app.get("/api/top", async (req, res) => {
   }
 })
 
-// Защищенные маршруты для товаров (требуют авторизации)
+// Authenticated drama routes
 app.use("/tovars", authenticateToken, tovarRoutes)
 
-// Маршруты пользователей
+// User auth and public routes
 app.use("/", userRoutes)
 
-// Admin-only route example
+// Admin user management routes
+app.use("/api/admin/users", authenticateToken, adminOnly, adminUserRoutes)
+
+// Admin panel test route
 app.get("/admin", authenticateToken, adminOnly, (req, res) => {
   res.json({ success: true, message: "Welcome to the admin panel" })
 })
 
-// Catch-all route for undefined paths
-app.use((req, res, next) => {
+// 404 fallback
+app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" })
 })
 
-// Start the server
+// Start server
 app.listen(3000, () => console.log("Server is running on port 3000"))

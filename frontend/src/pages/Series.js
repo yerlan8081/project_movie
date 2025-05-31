@@ -12,37 +12,36 @@ const Series = () => {
   const [filteredSeries, setFilteredSeries] = useState([])
 
   useEffect(() => {
-    const fetchSeries = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/tovars`)
+  const fetchSeries = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tovars`)
 
-        if (!response.ok) {
-          throw new Error("Не удалось загрузить сериалы")
-        }
-
-        const data = await response.json()
-
-        if (data.success) {
-          // Filter for series (assuming series have a longer duration or specific genre)
-          // This is a simplified example - you might need to adjust based on your data structure
-          const seriesOnly = data.data.filter((item) =>
-            item.genre.some((g) => g.toLowerCase() === "сериал" || g.toLowerCase() === "series"),
-          )
-          setSeries(seriesOnly)
-          setFilteredSeries(seriesOnly)
-        } else {
-          throw new Error(data.message || "Ошибка при загрузке сериалов")
-        }
-      } catch (error) {
-        console.error("Error fetching series:", error)
-        setError(error.message)
-      } finally {
-        setLoading(false)
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить сериалы")
       }
-    }
 
-    fetchSeries()
-  }, [])
+      const data = await response.json()
+
+      if (data.success) {
+        // 用type字段筛选电视剧
+        const seriesOnly = data.data.filter(item => item.type === "serial")
+
+        setSeries(seriesOnly)
+        setFilteredSeries(seriesOnly)
+      } else {
+        throw new Error(data.message || "Ошибка при загрузке сериалов")
+      }
+    } catch (error) {
+      console.error("Error fetching series:", error)
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchSeries()
+}, [])
+
 
   const handleSearch = (query) => {
     if (!query.trim()) {

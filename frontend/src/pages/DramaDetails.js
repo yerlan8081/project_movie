@@ -8,6 +8,7 @@ import { AuthContext } from "../contexts/AuthContext"
 import { FavoritesContext } from "../contexts/FavoritesContext"
 import CommentSection from "../components/CommentSection"
 import { toast } from "react-toastify"
+import ReactPlayer from "react-player" // 需要先安装 react-player: npm install react-player
 
 const DramaDetails = () => {
   const { id } = useParams()
@@ -38,6 +39,7 @@ const DramaDetails = () => {
           genre: Array.isArray(data.genre) ? data.genre : typeof data.genre === "string" ? [data.genre] : [],
           releaseDate: data.releaseDate || new Date().toISOString(),
           rating: data.rating || 0,
+          videoUrl: data.videoUrl || "", // 新增视频链接字段，需后端提供
         }
 
         setDrama(normalizedDrama)
@@ -148,6 +150,18 @@ const DramaDetails = () => {
               </Link>
             ))}
           </div>
+
+          {/* 视频播放器部分 */}
+          {drama.videoUrl && (
+            <div className="video-player-container" style={{ marginTop: "20px" }}>
+              <ReactPlayer
+                url={drama.videoUrl}
+                controls
+                width="100%"
+                height="480px"
+              />
+            </div>
+          )}
 
           <div className="drama-description">
             <h2>Описание</h2>

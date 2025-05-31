@@ -17,6 +17,7 @@ import {
   FaHeart,
   FaSearch,
   FaExclamationTriangle,
+  FaUsers
 } from "react-icons/fa"
 import { toast } from "react-toastify"
 
@@ -32,7 +33,6 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [serverStatus, setServerStatus] = useState("checking") // "checking", "online", "offline"
 
-  // Проверяем размер экрана для мобильного меню
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -46,11 +46,9 @@ const Header = () => {
     }
   }, [])
 
-  // Проверяем статус сервера
   useEffect(() => {
     const checkServerStatus = async () => {
       try {
-        // Пробуем разные URL для проверки доступности сервера
         const urls = [
           "http://localhost:3000/api/health",
           "http://localhost:3000/health",
@@ -65,7 +63,6 @@ const Header = () => {
             const response = await fetch(url, {
               method: "GET",
               headers: { Accept: "application/json" },
-              // Устанавливаем короткий таймаут
               signal: AbortSignal.timeout(2000),
             })
 
@@ -86,10 +83,7 @@ const Header = () => {
     }
 
     checkServerStatus()
-
-    // Проверяем статус сервера каждые 30 секунд
     const interval = setInterval(checkServerStatus, 30000)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -98,7 +92,6 @@ const Header = () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light")
   }, [darkMode])
 
-  // Закрываем меню при изменении маршрута
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
@@ -109,18 +102,14 @@ const Header = () => {
     navigate("/")
   }
 
-  // Исправляем функцию поиска в верхней части сайта
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      // Используем правильный путь для поиска
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
       setSearchQuery("")
-      console.log("Выполняется поиск:", searchQuery)
     }
   }
 
-  // Явно проверяем, является ли пользователь администратором
   const isAdmin = user && user.role === "admin"
 
   return (
@@ -164,7 +153,6 @@ const Header = () => {
                 </Link>
               )}
 
-              {/* Admin-only links - явно проверяем isAdmin */}
               {isAdmin && (
                 <>
                   <div className="admin-section">
@@ -174,6 +162,9 @@ const Header = () => {
                     </Link>
                     <Link to="/admin/manage" className="nav-item admin-link">
                       <FaEdit /> Управление
+                    </Link>
+                    <Link to="/admin/users" className="nav-item admin-link">
+                      <FaUsers /> Пользователи
                     </Link>
                   </div>
                 </>
@@ -238,7 +229,6 @@ const Header = () => {
             </Link>
           )}
 
-          {/* Admin-only links - явно проверяем isAdmin */}
           {isAdmin && (
             <>
               <Link to="/admin/add" className="nav-item admin-link">
@@ -247,6 +237,9 @@ const Header = () => {
               <Link to="/admin/manage" className="nav-item admin-link">
                 <FaEdit /> Управление
               </Link>
+              {/* <Link to="/admin/users" className="nav-item admin-link">
+                <FaUsers /> Пользователи
+              </Link> */}
             </>
           )}
 

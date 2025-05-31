@@ -10,6 +10,7 @@ const Genres = () => {
   const { genre } = useParams()
   const [dramas, setDramas] = useState([])
   const [allGenres, setAllGenres] = useState([])
+  const [allDramas, setAllDramas] = useState([]) // 新增：存所有影视作品
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -20,26 +21,23 @@ const Genres = () => {
         setLoading(true)
         console.log("Загрузка данных для страницы жанров:", genre)
 
-        // Загружаем список всех жанров
+        // 加载所有分类
         const genresData = await getGenres()
-        console.log("Полученные жанры:", genresData)
-
         if (Array.isArray(genresData)) {
           setAllGenres(genresData)
         } else if (typeof genresData === "object") {
-          // Если вернулся объект, пытаемся извлечь массив
           setAllGenres(genresData.genres || [])
         }
 
-        // Загружаем дорамы
+        // 加载所有影视作品
         const dramasData = await getDramas()
-        console.log("Полученные дорамы:", dramasData)
-
         if (Array.isArray(dramasData)) {
-          // Если указан жанр, фильтруем дорамы
+          setAllDramas(dramasData)
+
+          // 根据是否选中分类，过滤当前分类影视作品
           if (genre) {
             const filteredDramas = dramasData.filter(
-              (drama) => Array.isArray(drama.genre) && drama.genre.some((g) => g.toLowerCase() === genre.toLowerCase()),
+              (drama) => Array.isArray(drama.genre) && drama.genre.some((g) => g.toLowerCase() === genre.toLowerCase())
             )
             setDramas(filteredDramas)
           } else {
@@ -60,7 +58,6 @@ const Genres = () => {
     fetchData()
   }, [genre, retryCount])
 
-  // Функция для повторной загрузки данных
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1)
   }
@@ -100,6 +97,7 @@ const Genres = () => {
         </>
       )}
 
+      {/* 现有功能：显示选中分类影视作品 */}
       {genre && (
         <>
           {error ? (
@@ -114,6 +112,10 @@ const Genres = () => {
           )}
         </>
       )}
+
+      {/* 新增部分：始终显示所有影视作品作为“推荐” */}
+      <h2 style={{ marginTop: "40px" }}>Все фильмы и сериалы</h2>
+      <DramaGrid dramas={allDramas} loading={loading} error={error} />
     </div>
   )
 }

@@ -21,6 +21,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import { AuthProvider } from "./contexts/AuthContext"
 import { FavoritesProvider } from "./contexts/FavoritesContext"
+import ManageUsers from "./pages/ManageUsers";
 import "./style.css"
 
 function App() {
@@ -74,6 +75,15 @@ function App() {
                 element={
                   <AdminRoute>
                     <ManageDramas />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/users"
+                element={                 
+                  <AdminRoute>                  
+                    <ManageUsers />
                   </AdminRoute>
                 }
               />

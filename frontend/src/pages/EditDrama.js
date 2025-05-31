@@ -6,6 +6,17 @@ import { AuthContext } from "../contexts/AuthContext"
 import { getDrama, updateDrama } from "../utils/api"
 import { toast } from "react-toastify"
 
+const allGenres = [
+  "романтика",
+  "драма",
+  "фэнтези",
+  "боевик",
+  "комедия",
+  "триллер",
+  "фильм",
+  "сериал",
+]
+
 const EditDrama = () => {
   const { id } = useParams()
   const { token } = useContext(AuthContext)
@@ -13,7 +24,9 @@ const EditDrama = () => {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [image, setImage] = useState("")
-  const [genre, setGenre] = useState("")
+  const [videoUrl, setVideoUrl] = useState("")  // 新增视频URL状态
+  const [genre, setGenre] = useState(allGenres[0])
+  const [type, setType] = useState("serial")
   const [releaseDate, setReleaseDate] = useState("")
   const [rating, setRating] = useState("")
   const [loading, setLoading] = useState(true)
@@ -32,19 +45,19 @@ const EditDrama = () => {
         setTitle(data.title || "")
         setDescription(data.description || "")
         setImage(data.image || "")
+        setVideoUrl(data.videoUrl || "")  // 加载视频URL
 
-        // Обработка жанров
-        if (Array.isArray(data.genre)) {
-          setGenre(data.genre.join(", "))
+        if (Array.isArray(data.genre) && data.genre.length > 0) {
+          setGenre(data.genre[0])
         } else if (typeof data.genre === "string") {
           setGenre(data.genre)
         } else {
-          setGenre("")
+          setGenre(allGenres[0])
         }
 
-        // Обработка даты
+        setType(data.type || "serial")
+
         if (data.releaseDate) {
-          // Преобразуем дату в формат YYYY-MM-DD для input type="date"
           const date = new Date(data.releaseDate)
           const year = date.getFullYear()
           const month = String(date.getMonth() + 1).padStart(2, "0")
@@ -79,7 +92,9 @@ const EditDrama = () => {
       title,
       description: description || "",
       image: image || "",
-      genre: genre ? genre.split(",").map((g) => g.trim()) : [],
+      videoUrl: videoUrl || "",  // 提交视频URL
+      genre: [genre],
+      type,
       releaseDate: releaseDate || new Date().toISOString().slice(0, 10),
       rating: Number.parseFloat(rating) || 0,
     }
@@ -88,8 +103,6 @@ const EditDrama = () => {
 
     try {
       console.log("Отправка данных для обновления дорамы:", updatedDrama)
-
-      // Вызываем функцию обновления
       const result = await updateDrama(id, updatedDrama, token)
       console.log("Результат обновления:", result)
 
@@ -97,7 +110,6 @@ const EditDrama = () => {
         toast.success("Дорама успешно обновлена")
         navigate(`/dramas/${id}`)
       } else {
-        // Если сервер вернул ошибку
         toast.error("Ошибка при обновлении дорамы на сервере")
       }
     } catch (error) {
@@ -137,10 +149,12 @@ const EditDrama = () => {
           <label htmlFor="title">Название:</label>
           <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
+
         <div className="form-group">
           <label htmlFor="description">Описание:</label>
           <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
+
         <div className="form-group">
           <label htmlFor="image">URL изображения:</label>
           <input type="text" id="image" value={image} onChange={(e) => setImage(e.target.value)} />
@@ -158,14 +172,36 @@ const EditDrama = () => {
             </div>
           )}
         </div>
+
         <div className="form-group">
-          <label htmlFor="genre">Жанры (через запятую):</label>
-          <input type="text" id="genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
+          <label htmlFor="videoUrl">URL видео:</label>
+          <input type="text" id="videoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://example.com/video.mp4" />
         </div>
+
+        <div className="form-group">
+          <label htmlFor="genre">Жанр:</label>
+          <select id="genre" value={genre} onChange={(e) => setGenre(e.target.value)}>
+            {allGenres.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="type">Тип:</label>
+          <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
+            <option value="serial">Сериал</option>
+            <option value="movie">Фильм</option>
+          </select>
+        </div>
+
         <div className="form-group">
           <label htmlFor="releaseDate">Дата выхода:</label>
           <input type="date" id="releaseDate" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)} />
         </div>
+
         <div className="form-group">
           <label htmlFor="rating">Рейтинг:</label>
           <input
@@ -178,6 +214,7 @@ const EditDrama = () => {
             max="10"
           />
         </div>
+
         <div className="form-actions">
           <button type="submit" className="btn" disabled={submitting}>
             {submitting ? "Сохранение..." : "Сохранить изменения"}
